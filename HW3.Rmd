@@ -1,0 +1,154 @@
+---
+title: "ADA class1 Survey Code"
+output: html_document
+date: "2024-08-28"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+```
+
+```{r}
+# Open libraries
+library(haven)
+library(dplyr)
+library(readr)
+library(tidyr)
+```
+1. Import class one survey data from our Github site (https://github.com/kijohnson/ADA-2024) (The dataset is called ‘Class 1 Survey Fall 2024_di.csv’), calling the R dataframe that you create C1survey.
+
+```{r}
+# Read .csv file and assign it to C1survey
+C1survey <-
+ read_csv(
+   "https://raw.githubusercontent.com/kijohnson/ADA-2024/main/Class%201%20(Getting%20started%20and%20RR%20I)/Lab/Class%201%20Survey%20Fall%202024_di.csv", show_col_types = FALSE
+   )
+```
+
+2. Determine: a. the number of observations (i.e. the number of people who filled out the survey) and b. the number of variables in the dataframe.
+
+```{r}
+# Print the numbers of rows (observations) and columns (variables) within the dataset
+cat("The number of observations is", nrow(C1survey),"\n")
+cat("The number of variables is", ncol(C1survey))
+```
+
+3. a. Rename the column variables to something shorter and that is descriptive of what the variable is about (for example like_dogs for the ‘Do you like dogs?’ question variable) and b. Display that they are renamed.
+
+```{r}
+# Assign new variables names to the dataset
+names(C1survey)[1:27]<-c("id", "like_cats", "like_dogs", "have_desert", "slogan",
+"fav_day", "larkORowl", "fav_food", "fav_drink", "fav_season", "fav_month", "hobby",
+"program", "specialization", "stat_software", "R_exp", "coding_comfort", "coding_length",
+"top_three","public_health_interest", "fav_num", "bday", "bmonth", "country", "state",
+"city", "highest_educ_level")
+
+# Print the new variable names
+colnames(C1survey)
+```
+4. Write code to determine and display the number of factor, integer, numerical, and character variables there are in the C1survey dataset.
+
+```{r}
+# Apply class() function to each of the variable in C1survey and return a list to C1survey_class
+C1survey_class <- lapply(C1survey,class)
+
+# Initialize the count variable
+character = 0
+numeric = 0
+factor = 0
+integer = 0
+
+# Run a for loop to go through each item of the list, calculate the total numbers of each datatype.
+l = length(C1survey_class) 
+for (i in (1:l)){
+  if (C1survey_class[i] == 'character'){
+    character = character + 1
+  }
+  else if (C1survey_class[i] == 'numeric'){
+    numeric = numeric + 1
+  }
+  else if (C1survey_class[i] == 'factor'){
+    factor = factor + 1
+  }
+  else if (C1survey_class[i] == 'integer'){
+    integer = integer + 1
+  }
+}
+
+# Print the count of each datatype
+cat('There are',factor,'factor variables,',integer,'integer variables,', 
+    numeric,'numerical variables, and', character, 'character variables in C1Survey dataset.');
+```
+5. a. Using code, check the bday and bmonth variables for any unusual or missing values. If you find any, b. describe what you will do with the unusual values in a comment before or immediately following the code that does it, and c. after you have cleaned up any unusual values, find the median bday and month. *Note: please make sure that your bday and month variables are numeric before doing statistics
+
+```{r}
+# Check the values in bday and bmonth
+C1survey$bday
+C1survey$bmonth
+
+# Recode non-numeric bday values
+C1survey$bday <- ifelse(C1survey$bday == 'March 31st','31',C1survey$bday)
+C1survey$bday <- ifelse(C1survey$bday == "May 21-report 21", '21', C1survey$bday)
+# Convert it into a numeric variable
+C1survey$bday <- as.numeric(C1survey$bday)
+class(C1survey$bday)
+# Make the 0 as N/A
+C1survey$bday <- ifelse(C1survey$bday == 0, NA, C1survey$bday)
+
+# Recode non-numeric bmonth values
+C1survey$bmonth <- ifelse(C1survey$bmonth == 'March', '3', C1survey$bmonth)
+C1survey$bmonth <- ifelse(C1survey$bmonth == 'September', '9', C1survey$bmonth)
+C1survey$bmonth <- ifelse(C1survey$bmonth == 'February', '2', C1survey$bmonth)
+C1survey$bmonth <- ifelse(C1survey$bmonth == "May 21-report 5", '5', C1survey$bmonth)
+C1survey$bmonth <- ifelse(C1survey$bmonth == 'July', '7', C1survey$bmonth)
+
+# Convert it into a numeric variable
+C1survey$bmonth <- as.numeric(C1survey$bmonth)
+
+cat('The median value of bday:', median(C1survey$bday, na.rm = TRUE), ', and the median value of bmonth:',median(C1survey$bmonth))
+```
+6. a. Create a new variable called bseason that gives the season according to Northern Meteorological season in which respondents were born (winter = 12/1 to 2/29, spring = 3/1 to 5/31, summer = 6/1 to 8/31, fall = 9/1 to 11/30). b. Using the table function, print a table of Seasons in the columns and bmonths in the rows that allows you to check that the coding is correct c. Sum the columns using the addmargins function to answer the question of how many classmates were born in each season? Include your answer in the code.
+```{r}
+# Create a new variable
+C1survey <- C1survey%>% 
+  mutate(bseason = case_when(bmonth %in% c(12,1,2) ~ 'Winter',
+                             bmonth %in% c(3,4,5) ~ 'Spring',
+                             bmonth %in% c(6,7,8) ~ 'Summer',
+                             bmonth %in% c(9,10,11) ~ 'Fall'))
+
+# Create a table
+table(C1survey$bmonth,C1survey$bseason)
+
+# Add margin sum
+table.margin <- addmargins(table(C1survey$bmonth, C1survey$bseason), 1)
+table.margin
+cat('Fall:',table.margin[13,1])
+cat('\nSpring:',table.margin[13,2])
+cat('\nSummer:',table.margin[13,3])
+cat('\nWinter',table.margin[13,4])
+
+  
+```
+
+
+7. Pick your favorite variable or variables to analyze, come up with a question you want to answer with that variable or variables, generate the code, and provide an answer to your question. Describe what you did using comments (i.e. #’s).
+```{r}
+# Research Question: if people's preference in season is associated with the season they were born
+
+# Create a table of people's favorite season and the season they were born
+table_season = table(C1survey$fav_season, C1survey$bseason)
+table_season
+# Using chi-squared test to first calculate the expected values of each cells
+test <- chisq.test(table_season)
+test$expected
+# Since the expected values of each cells are less than 5, use the Fisher's exact test to examine the association
+test2 <- fisher.test(table_season)
+test2$p.value
+# The p-value of 2-sided fisher test (0.8997058) shows that there is no significant association between people's preference in season and the # season they were born.
+```
+
+
+
+
+
